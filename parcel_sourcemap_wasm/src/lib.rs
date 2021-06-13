@@ -115,6 +115,16 @@ impl SourceMap {
         Ok(JsValue::from_serde(&result).unwrap())
     }
 
+    pub fn toJSONBuffer(&mut self, file: String, source_root: String) -> Result<JsValue, JsValue> {
+        let buf = self.map.write_to_json_buffer(file, source_root)?;
+        Ok(Uint8Array::from(buf.as_slice()).into())
+    }
+
+    pub fn toDataURL(&mut self, file: String, source_root: String) -> Result<JsValue, JsValue> {
+        let string = self.map.write_to_data_url(file, source_root)?;
+        Ok(JsValue::from(string))
+    }
+
     pub fn getMappings(&self) -> Result<JsValue, JsValue> {
         let mut mappings: Vec<MappingResult> = vec![];
         for (generated_line, mapping_line) in self.map.mapping_lines.iter().enumerate() {

@@ -37,6 +37,9 @@ pub enum SourceMapErrorType {
 
     // Failed to convert utf-8 to array
     FromUtf8Error = 11,
+
+    // Failed to serialize to JSON
+    JSONSerializeError = 12,
 }
 
 pub struct SourceMapError {
@@ -121,6 +124,9 @@ impl From<SourceMapError> for napi::Error {
             SourceMapErrorType::FromUtf8Error => {
                 reason.push_str("Could not convert utf-8 array to string");
             }
+            SourceMapErrorType::JSONSerializeError => {
+                reason.push_str("Error serializing to JSON");
+            }
         }
 
         // Add reason to error string if there is one
@@ -176,6 +182,9 @@ impl From<SourceMapError> for wasm_bindgen::JsValue {
             SourceMapErrorType::FromUtf8Error => {
                 reason.push_str("Could not convert utf-8 array to string");
             }
+            SourceMapErrorType::JSONSerializeError => {
+                reason.push_str("Error serializing to JSON");
+            }
         }
 
         // Add reason to error string if there is one
@@ -200,5 +209,12 @@ impl From<std::string::FromUtf8Error> for SourceMapError {
     #[inline]
     fn from(_err: std::string::FromUtf8Error) -> SourceMapError {
         SourceMapError::new(SourceMapErrorType::FromUtf8Error)
+    }
+}
+
+impl From<serde_json::Error> for SourceMapError {
+    #[inline]
+    fn from(_err: serde_json::Error) -> SourceMapError {
+        SourceMapError::new(SourceMapErrorType::JSONSerializeError)
     }
 }

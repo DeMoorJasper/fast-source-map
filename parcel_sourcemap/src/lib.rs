@@ -30,6 +30,18 @@ pub struct SourceMap {
     pub mapping_lines: Vec<MappingLine>,
 }
 
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct JSONSourceMap<'a> {
+    version: u8,
+    file: String,
+    source_root: String,
+    mappings: String,
+    sources: &'a Vec<String>,
+    sources_content: &'a Vec<String>,
+    names: &'a Vec<String>,
+}
+
 impl SourceMap {
     pub fn new(project_root: &str) -> Self {
         Self {
@@ -606,6 +618,41 @@ impl SourceMap {
         }
 
         Ok(())
+    }
+
+    pub fn write_to_json_buffer(
+        &mut self,
+        file: String,
+        source_root: String,
+    ) -> Result<Vec<u8>, SourceMapError> {
+        let mut vlq_output: Vec<u8> = vec![];
+        self.write_vlq(&mut vlq_output)?;
+
+        let sm = JSONSourceMap {
+            version: 3,
+            file,
+            source_root,
+            mappings: unsafe { String::from_utf8_unchecked(vlq_output) },
+            sources: &self.sources,
+            sources_content: &self.sources_content,
+            names: &self.names,
+        };
+
+        let buf = serde_json::to_vec(&sm)?;
+        Ok(buf)
+    }
+
+    pub fn write_to_data_url(
+        &mut self,
+        file: String,
+        source_root: String,
+    ) -> Result<String, SourceMapError> {
+        let buf = self.write_to_json_buffer(file, source_root)?;
+        let b64 = base64::encode(&buf);
+        Ok(format!(
+            "data:application/json;charset=utf-8;base64,{}",
+            b64
+        ))
     }
 }
 

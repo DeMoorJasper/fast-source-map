@@ -322,6 +322,40 @@ fn to_vlq(ctx: CallContext) -> Result<JsObject> {
     Ok(result_obj)
 }
 
+#[js_function(2)]
+fn to_json_buffer(ctx: CallContext) -> Result<JsBuffer> {
+    let this: JsObject = ctx.this_unchecked();
+    let source_map_instance: &mut SourceMap = ctx.env.unwrap(&this)?;
+
+    let file = ctx.get::<JsString>(0)?.into_utf8()?;
+    let source_root = ctx.get::<JsString>(1)?.into_utf8()?;
+
+    let buf = source_map_instance.write_to_json_buffer(
+        file.as_str()?.to_string(),
+        source_root.as_str()?.to_string(),
+    )?;
+
+    let buffer = ctx.env.create_buffer_with_data(buf)?.into_raw();
+    Ok(buffer)
+}
+
+#[js_function(2)]
+fn to_data_url(ctx: CallContext) -> Result<JsString> {
+    let this: JsObject = ctx.this_unchecked();
+    let source_map_instance: &mut SourceMap = ctx.env.unwrap(&this)?;
+
+    let file = ctx.get::<JsString>(0)?.into_utf8()?;
+    let source_root = ctx.get::<JsString>(1)?.into_utf8()?;
+
+    let string = source_map_instance.write_to_data_url(
+        file.as_str()?.to_string(),
+        source_root.as_str()?.to_string(),
+    )?;
+
+    let s = ctx.env.create_string(&string)?;
+    Ok(s)
+}
+
 #[js_function(1)]
 fn add_indexed_mappings(ctx: CallContext) -> Result<JsUndefined> {
     let this: JsObject = ctx.this_unchecked();
@@ -495,6 +529,8 @@ fn init(mut exports: JsObject, env: Env) -> Result<()> {
         Property::new(&env, "addIndexedMappings")?.with_method(add_indexed_mappings);
     let add_vlq_map_method = Property::new(&env, "addVLQMap")?.with_method(add_vlq_map);
     let to_vlq_method = Property::new(&env, "toVLQ")?.with_method(to_vlq);
+    let to_json_buffer_method = Property::new(&env, "toJSONBuffer")?.with_method(to_json_buffer);
+    let to_data_url_method = Property::new(&env, "toDataURL")?.with_method(to_data_url);
     let offset_lines_method = Property::new(&env, "offsetLines")?.with_method(offset_lines);
     let offset_columns_method = Property::new(&env, "offsetColumns")?.with_method(offset_columns);
     let add_empty_map_method = Property::new(&env, "addEmptyMap")?.with_method(add_empty_map);
@@ -524,6 +560,8 @@ fn init(mut exports: JsObject, env: Env) -> Result<()> {
             add_vlq_map_method,
             to_buffer_method,
             to_vlq_method,
+            to_json_buffer_method,
+            to_data_url_method,
             offset_lines_method,
             offset_columns_method,
             add_empty_map_method,

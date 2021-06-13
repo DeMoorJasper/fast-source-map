@@ -441,4 +441,12 @@ export default class SourceMap {
       rootDir: this.projectRoot || options.rootDir,
     });
   }
+
+  toJSONBuffer(file: string, sourceRoot: string): Buffer {
+    return this.sourceMapInstance.toJSONBuffer(file, sourceRoot);
+  }
+
+  toDataURL(file: string, sourceRoot: string): Buffer {
+    return this.sourceMapInstance.toDataURL(file, sourceRoot);
+  }
 }
