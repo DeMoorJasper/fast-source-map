@@ -1,20 +1,37 @@
-const b = require('benny');
+const { Benchmark } = require('tiny-benchy');
 const { SourceMap } = require('./setup');
 const AngularSourceMap = require('./maps/angular');
 
-exports.serialize = function () {
+const setup = () => {
   let sourcemapInstance = new SourceMap();
   sourcemapInstance.addVLQMap(AngularSourceMap);
+  return sourcemapInstance;
+};
 
-  return b.suite(
-    'serialize',
-    b.add('Save buffer', () => {
+exports.serialize = function () {
+  const suite = new Benchmark({
+    iterations: 75,
+  });
+
+  suite.add(
+    'serialize#Save buffer',
+    (sourcemapInstance) => {
       sourcemapInstance.toBuffer();
-    }),
-    b.add('Serialize to vlq', () => {
-      sourcemapInstance.toVLQ();
-    }),
-    b.cycle(),
-    b.complete()
+    },
+    {
+      setup,
+    }
   );
+
+  suite.add(
+    'serialize#Serialize to vlq',
+    (sourcemapInstance) => {
+      sourcemapInstance.toVLQ();
+    },
+    {
+      setup,
+    }
+  );
+
+  return suite.run();
 };

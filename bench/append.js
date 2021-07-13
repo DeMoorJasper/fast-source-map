@@ -1,20 +1,32 @@
-const b = require('benny');
+const { Benchmark } = require('tiny-benchy');
 const { SourceMap } = require('./setup');
 const AngularSourceMap = require('./maps/angular');
 
-exports.append = function () {
+const setup = () => {
   let sourcemapInstance = new SourceMap();
   sourcemapInstance.addVLQMap(AngularSourceMap);
 
   let sourcemapInstance2 = new SourceMap();
   sourcemapInstance2.addVLQMap(AngularSourceMap);
 
-  return b.suite(
-    'append',
-    b.add('addSourceMap', () => {
+  return {
+    sourcemapInstance,
+    sourcemapInstance2,
+  };
+};
+
+exports.append = function () {
+  const suite = new Benchmark({
+    iterations: 10,
+  });
+
+  suite.add(
+    'append#addSourceMap',
+    ({ sourcemapInstance, sourcemapInstance2 }) => {
       sourcemapInstance.addSourceMap(sourcemapInstance2, 318);
-    }),
-    b.cycle(),
-    b.complete()
+    },
+    { setup }
   );
+
+  return suite.run();
 };
